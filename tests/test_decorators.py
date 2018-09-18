@@ -1595,3 +1595,16 @@ def test_param_rerouting(hug_api):
 
     assert hug.test.get(hug_api, 'pull_record').data == 1
     assert hug.test.get(hug_api, 'pull_record', id=10).data == 10
+
+
+def test_api_conflict(hug_api):
+    @hug.get('/echo', versions=1)
+    def echo():
+        return 'hello'
+
+    @hug.get('/echo/{event}', versions=range(2, 5))
+    def echo(event):
+        return event
+
+    with pytest.raises(AssertionError):
+        assert hug.test.get(api, '/echo/v1test').status == falcon.HTTP_200
